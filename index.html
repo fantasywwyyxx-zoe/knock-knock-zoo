@@ -59,7 +59,7 @@
   img{ image-rendering:pixelated; }
   /* 防双击放大：全站操作元素只响应点按手势，敲蛋舞台完全禁用手势缩放/滚动 */
   body{ touch-action:manipulation; }
-  button, .cell, .sheet-cell, .critter, .mappin, .zoochip, [role="button"]{ touch-action:manipulation; }
+  button, .cell, .sheet-cell, .critter, .mappin, [role="button"]{ touch-action:manipulation; }
   .kstage, .kstage *{ touch-action:none; }
 
   .app{ width:100%; max-width:min(480px,100vw); min-width:0; box-sizing:border-box; margin:0 auto; height:100dvh; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; overflow-x:clip; }
@@ -247,7 +247,7 @@
   }
   .nest-label{ margin-top:5px; font-size:10.5px; font-weight:700; color:var(--sub); background:rgba(255,253,244,.75); border-radius:99px; padding:1px 8px; }
   @media (prefers-color-scheme: dark){ .nest-label{ background:rgba(40,30,16,.72); } }
-  .yard-animals{ position:absolute; left:0; right:0; top:47%; bottom:4px; z-index:3; }
+  .yard-animals{ position:absolute; left:0; right:0; top:38%; bottom:4px; z-index:3; }
   .yard-empty{
     position:absolute; left:50%; top:64%; transform:translateX(-50%); z-index:2; width:max-content; max-width:86%;
     background:var(--panel); border:2px dashed var(--line2); color:var(--sub);
@@ -654,22 +654,7 @@
   .famcap{ font-size:12px; color:var(--sub); font-weight:800; margin-top:8px; }
   @media (prefers-reduced-motion: reduce){ .flipinner{ transition:none; } }
 
-  /* ---------- 动物园：园区 chips / 场景基调 / 收集进度 ---------- */
-  .zoochips{
-    position:absolute; top:10px; left:10px; right:10px; z-index:8;
-    display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; padding:2px;
-    scrollbar-width:none; -webkit-overflow-scrolling:touch;
-  }
-  .zoochips::-webkit-scrollbar{ display:none; }
-  .zoochip{
-    flex:none; border:2px solid var(--line2); background:var(--panel); color:var(--sub);
-    font-family:inherit; font-size:12.5px; font-weight:800; border-radius:999px;
-    padding:5px 11px; cursor:pointer; white-space:nowrap;
-  }
-  .zoochip b{ color:var(--orange-deep); font-weight:800; margin-left:2px; }
-  .zoochip.on{ background:var(--sage); border-color:var(--sage-deep); color:#fff; box-shadow:0 2px 0 var(--sage-shadow); }
-  .zoochip.on b{ color:#fff; }
-  .zoochip b{ color:var(--sage-deep); }
+  /* ---------- 动物园：场景基调 / 收集进度 ---------- */
   .yard-deco{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
   .yard-deco span{ position:absolute; display:block; }
   /* 扁平绘本场景（过渡期 CSS 版）：远丘 + 圆树剪影 + 地面色带 */
@@ -750,8 +735,6 @@
   .ic-svg{ width:1.12em; height:1.12em; vertical-align:-0.2em; flex:none; display:inline-block; }
   .ic-svg.lg{ width:22px; height:22px; vertical-align:-5px; }
   .pill .ic-svg, .sec .ic-svg{ width:15px; height:15px; vertical-align:-2.5px; }
-  .zoochip .ic-svg{ width:15px; height:15px; vertical-align:-2.5px; margin-right:1px; }
-  .zoochip .ic-svg.combo2{ margin-left:-7px; }
   .dexzone-head b .ic-svg{ width:16px; height:16px; vertical-align:-3px; margin-right:3px; }
   .nest-sign .ic-svg{ width:14px; height:14px; vertical-align:-2px; }
   .btn .ic-svg{ width:15px; height:15px; vertical-align:-2.5px; }
@@ -792,19 +775,18 @@
   .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   /* ---------- 数字与英文走 Fredoka（计数 / 档位 / 倒计时 / 英文名） ---------- */
-  .pill b, .rackcount, .nest-time, .zoochip b, .dexzone-head span, .cell .no,
+  .pill b, .rackcount, .nest-time, .dexzone-head span, .cell .no,
   .tierchip, .gpct, .qheatnum, .dexname .en, .sc-sub, .mapfoot b, .heatbar{
     font-family:"Fredoka","Noto Sans SC",sans-serif; font-weight:600;
   }
 
   /* ---------- 全站精致度统一：按压反馈 / 图钉选中环 ---------- */
-  .btn, .zoochip, .iconbtn, .sheet-close, .helpbtn, .seg button{
+  .btn, .iconbtn, .sheet-close, .helpbtn, .seg button{
     transition:transform .15s ease, box-shadow .15s ease, background-color .2s ease, border-color .2s ease, color .2s ease;
   }
   .cell, .sheet-cell, .rackcell, nav button{
     transition:transform .15s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
   }
-  .zoochip:active{ transform:scale(.95); }
   .cell:active, .sheet-cell:active, .rackcell:active{ transform:scale(.96); }
   nav button:active{ transform:scale(.94); }
   .iconbtn:active, .sheet-close:active{ transform:scale(.92); }
@@ -871,7 +853,6 @@
         <div class="yard-deco" aria-hidden="true"><span class="deco-a"></span><span class="deco-b"></span><span class="deco-c"></span></div>
         <div class="yard-fence"></div>
         <div class="yard-path"></div>
-        <div class="zoochips" id="zooChips" role="tablist" aria-label="园区切换"></div>
         <div class="yard-animals" id="yardAnimals"></div>
         <div class="yard-empty" id="yardEmpty">孵出第一只动物，它就会住在这里</div>
         <div class="yard-nest" id="yardNest"></div>
@@ -1767,31 +1748,12 @@ function layoutFlatRow(slugs, bandW, bandH){
   });
   return items;
 }
-/* ---------- 动物园园区（按栖息地） ---------- */
+/* ---------- 栖息地数据（图鉴分区 / 地图蛋池共用；首页景箱不分类） ---------- */
 var ZOO_ZONES=["森林","草原公园","河流","海湾海岸","湿地","城市","山地"];
 var ZONE_CLASS={"森林":"forest","草原公园":"grass","河流":"river","海湾海岸":"bay","湿地":"wetland","城市":"city","山地":"mountain"};
 var HABITAT_SPOT={};
 SPOTS.forEach(function(s){ HABITAT_SPOT[s.habitat]=s.name; });
-var zooZone="all";
-var SIL_POS=[{l:62,t:24},{l:26,t:62},{l:5,t:36}];
 function zoneSpecies(h){ return SPECIES.filter(function(x){ return x.habitat===h; }); }
-function zoneOwnedCount(h){ return zoneSpecies(h).filter(function(x){ return S.owned[x.slug]>0; }).length; }
-function renderZooChips(){
-  var wrap=document.getElementById("zooChips"); if(!wrap) return;
-  wrap.innerHTML="";
-  var defs=[{id:"all", name:"全部", count:ownedSlugs().length}];
-  ZOO_ZONES.forEach(function(h){ defs.push({id:h, name:h, count:zoneOwnedCount(h)}); });
-  var ZCHIP_ICON={"all":"paw","森林":"tree","草原公园":"leaf","河流":"wave","海湾海岸":"sun","湿地":"drop","城市":"building","山地":"mountain"};
-  defs.forEach(function(d){
-    var b=document.createElement("button");
-    b.type="button"; b.className="zoochip"+(zooZone===d.id?" on":"");
-    b.setAttribute("role","tab"); b.setAttribute("aria-selected", zooZone===d.id?"true":"false");
-    var icHtml=ic(ZCHIP_ICON[d.id]||"paw")+(d.id==="海湾海岸"?'<svg class="ic-svg combo2" aria-hidden="true"><use href="#i-wave"/></svg>':"");
-    b.innerHTML=icHtml+" "+d.name+" <b>"+d.count+"</b>";
-    b.onclick=function(){ zooZone=d.id; renderZooChips(); renderYard(); };
-    wrap.appendChild(b);
-  });
-}
 function ringSVG(pct, small){
   var p=Math.max(0,Math.min(100,pct))/100;
   if(small){
@@ -1834,12 +1796,11 @@ function renderYard(){
     if(egg && isReady(egg)){ el.style.cursor="pointer"; el.onclick=function(){ openKnock(egg.id); }; }
   });
   var yardEl=document.getElementById("yard");
-  /* 背景不分区域：全园统一一张专用景箱图，园区 chips 只筛选站在里面的动物，背景纹丝不动 */
+  /* 背景不分区域、动物也不分园区：全园统一一张专用景箱图，所有已拥有的动物一起站在里面 */
   if(yardEl) yardEl.className="yard hasbg";
   if(animalsEl){
     animalsEl.innerHTML="";
-    var ownedAll=ownedSlugs();
-    var owned=(zooZone==="all" ? ownedAll : ownedAll.filter(function(s){ var x=sp(s); return x && x.habitat===zooZone; })).slice(0,8);
+    var owned=ownedSlugs();
     var flatOwned=owned.filter(function(s){ return !!FLAT[s]; });
     var pixOwned=owned.filter(function(s){ return !FLAT[s]; });
     /* 像素动物：后景一排，沿用原来的溜达 */
@@ -1877,27 +1838,7 @@ function renderYard(){
       };
       animalsEl.appendChild(btn);
     });
-    var silCount=0;
-    if(zooZone!=="all"){
-      var uncollected=zoneSpecies(zooZone).filter(function(x){ return !(S.owned[x.slug]>0); }).slice(0,3);
-      uncollected.forEach(function(info, idx){
-        var pos=SIL_POS[idx%SIL_POS.length];
-        var f=FLAT[info.slug];
-        var btn=document.createElement("button");
-        btn.type="button"; btn.className="critter sil"+(f?" flat":"");
-        if(f){ btn.style.left=pos.l+"%"; btn.style.bottom="4%"; btn.style.width=f.w+"px"; }
-        else{ btn.style.left=pos.l+"%"; btn.style.top=pos.t+"%"; }
-        btn.setAttribute("aria-label","还没收集到的动物");
-        btn.innerHTML='<span class="cname">？？？</span><img src="'+(f?f.src:IMG(info.slug))+'" alt="还没收集到的动物剪影"><span class="sil-q">?</span>';
-        btn.onclick=function(){
-          btn.classList.add("showname");
-          clearTimeout(btn._nt); btn._nt=setTimeout(function(){ btn.classList.remove("showname"); },2000);
-          toast("还没收集到 · 去"+(HABITAT_SPOT[zooZone]||"地图")+"领蛋");
-        };
-        animalsEl.appendChild(btn); silCount++;
-      });
-    }
-    if(emptyEl) emptyEl.style.display=(owned.length||silCount)?"none":"block";
+    if(emptyEl) emptyEl.style.display=owned.length?"none":"block";
   }
 }
 function tickYard(){
@@ -2873,7 +2814,7 @@ function openFamily(id){
 var _sb=document.getElementById("sndBtn"); if(_sb) _sb.onclick=function(){ setSound(!soundOn); };
 applySoundUI();
 
-function render(){ renderEggs(); renderDex(); renderZooChips(); renderYard(); renderPins(); }
+function render(){ renderEggs(); renderDex(); renderYard(); renderPins(); }
 render();
 settleOffline();
 </script>
