@@ -1118,19 +1118,34 @@ let soundOn=true;
 try{ soundOn=localStorage.getItem(SND_KEY)!=="0"; }catch(e){}
 let AC=null, sfxBus=null, bgmBus=null, bgmTimer=null, bgmNext=0, bgmStep=0;
 function audioReady(){ return !!(AC && soundOn && AC.state==="running"); }
+function acResume(){
+  if(!AC) return;
+  try{ var p=AC.resume(); if(p && p.catch) p.catch(function(){}); }catch(e){}
+}
+/* iOS 解锁关键一步：手势内播一个 1 帧静音 buffer。缺了它，iOS/WKWebView 的上下文会一直卡在
+   suspended / interrupted（iOS 专有状态），所有音效被 audioReady 挡下、BGM 调度器空转 —— 表现为完全没声音。 */
+function unlockBuffer(){
+  if(!AC) return;
+  try{
+    var b=AC.createBuffer(1,1,AC.sampleRate), s=AC.createBufferSource();
+    s.buffer=b; s.connect(AC.destination); s.start(0);
+  }catch(e){}
+}
 function initAudio(){
-  if(AC){ if(soundOn && AC.state==="suspended") AC.resume(); return; }
+  if(AC){ if(soundOn && AC.state!=="running"){ acResume(); unlockBuffer(); } return; }
   if(!soundOn) return;
   try{
     AC=new (window.AudioContext||window.webkitAudioContext)();
     var master=AC.createGain(); master.gain.value=.9; master.connect(AC.destination);
     sfxBus=AC.createGain(); sfxBus.gain.value=.8; sfxBus.connect(master);
     bgmBus=AC.createGain(); bgmBus.gain.value=.32; bgmBus.connect(master);
+    if(AC.state!=="running"){ acResume(); unlockBuffer(); }
+    AC.onstatechange=function(){ if(AC && AC.state==="running") startBGM(); };
     startBGM();
   }catch(e){ AC=null; }
 }
 function tone(o){
-  if(!audioReady()) return;
+  if(!audioReady()){ if(AC && soundOn && AC.state!=="running") acResume(); return; }
   var t0=(typeof o.t==="number")?o.t:AC.currentTime;
   var osc=AC.createOscillator(), g=AC.createGain();
   osc.type=o.type||"sine";
@@ -1143,7 +1158,7 @@ function tone(o){
   osc.start(t0); osc.stop(t0+(o.dur||.15)+.05);
 }
 function noiseBurst(o){
-  if(!audioReady()) return;
+  if(!audioReady()){ if(AC && soundOn && AC.state!=="running") acResume(); return; }
   var t0=(typeof o.t==="number")?o.t:AC.currentTime;
   var dur=o.dur||.1, len=Math.max(1,Math.floor(dur*AC.sampleRate));
   var buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
@@ -1226,6 +1241,7 @@ function startBGM(){
   bgmStep=0; bgmNext=AC.currentTime+.15;
   bgmTimer=setInterval(function(){
     if(!AC || !soundOn || AC.state!=="running") return;
+    if(bgmNext<AC.currentTime-.25) bgmNext=AC.currentTime+.05; /* 挂起太久恢复时跳过错过的拍，别把旧音符挤成一团补播 */
     while(bgmNext<AC.currentTime+.9){
       var idx=BGM_MEL[bgmStep%BGM_MEL.length];
       if(idx>=0) bgmNote(BGM_SCALE[idx], bgmNext, .15);
@@ -1243,15 +1259,18 @@ function setSound(on){
   soundOn=on;
   try{ localStorage.setItem(SND_KEY, on?"1":"0"); }catch(e){}
   applySoundUI();
-  if(on){ initAudio(); if(AC && AC.state==="suspended") AC.resume(); }
+  if(on){ initAudio(); acResume(); setTimeout(function(){ sfxChime(); },90); } /* 开声立刻一记 chime，让用户当场确认喇叭通了 */
   else if(AC){ AC.suspend(); }
 }
-/* 首次交互后才允许启动（自动播放限制）；切后台暂停、回来恢复 */
-document.addEventListener("pointerdown", function(){ if(soundOn) initAudio(); }, { passive:true });
+/* 首次交互后才允许启动（自动播放限制）；pointerdown 之外再补 touchend/click 两道，
+   老 iOS 只认 touch 手势解锁；每次手势只要上下文还没 running 就重试解锁。切后台暂停、回来恢复。 */
+["pointerdown","touchend","click"].forEach(function(ev){
+  document.addEventListener(ev, function(){ if(soundOn) initAudio(); }, { passive:true });
+});
 document.addEventListener("visibilitychange", function(){
   if(!AC) return;
   if(document.hidden) AC.suspend();
-  else if(soundOn) AC.resume();
+  else if(soundOn) initAudio();
 });
 /* 普通按钮轻 blip（敲蛋按钮除外，它有自己的敲击声） */
 document.addEventListener("click", function(e){
